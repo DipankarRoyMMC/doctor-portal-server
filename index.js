@@ -20,6 +20,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     const appointmentOptionCollection = client.db('doctorPortal').collection('appointmentOptions');
     const bookingCollection = client.db('doctorPortal').collection('bookingOptions');
+    const userCollection = client.db('doctorPortal').collection('users')
     try {
         app.get('/apppointmentOptions', async (req, res) => {
             const date = req.query.date;
@@ -37,9 +38,15 @@ async function run() {
 
                 console.log(date, option.name, remainingSlots.length)
             });
-
-
             res.send(options);
+        })
+
+        // get booking data from server 
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const data = await bookingCollection.find(query).toArray();
+            res.send(data);
         })
 
         app.post('/booking', async (req, res) => {
@@ -54,11 +61,14 @@ async function run() {
                 const message = `You already have a booking onl ${booking.appointmentDate} `;
                 return res.send({ acknowledged: false, message });
             }
-
-
             const data = await bookingCollection.insertOne(booking);
             res.send(data);
-
+        })
+        // user save on data base post method 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
         })
     }
     finally {
