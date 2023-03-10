@@ -41,7 +41,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     const appointmentOptionCollection = client.db('doctorPortal').collection('appointmentOptions');
     const bookingCollection = client.db('doctorPortal').collection('bookingOptions');
-    const userCollection = client.db('doctorPortal').collection('users')
+    const userCollection = client.db('doctorPortal').collection('users');
+    const doctorsCollection = client.db('doctorPortal').collection('doctors')
     try {
         app.get('/apppointmentOptions', async (req, res) => {
             const date = req.query.date;
@@ -60,6 +61,12 @@ async function run() {
                 console.log(date, option.name, remainingSlots.length)
             });
             res.send(options);
+        })
+
+        app.get('/appointmentSpecialty', async (req, res) => {
+            const query = {}
+            const result = await appointmentOptionCollection.find(query).project({ name: 1 }).toArray();
+            res.send(result);
         })
 
         // require users from database 
@@ -145,6 +152,19 @@ async function run() {
             const user = await userCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'admin' })
         })
+
+        app.get('/doctors', async (req, res) => {
+            const query = {};
+            const result = await doctorsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/doctors', async (req, res) => {
+            const doctor = req.body;
+            const result = await doctorsCollection.insertOne(doctor);
+            res.send(result);
+        })
+
     }
     finally {
 
